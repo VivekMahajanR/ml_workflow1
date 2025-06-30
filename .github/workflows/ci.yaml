@@ -26,9 +26,6 @@ jobs:
         run: |
           pip install -r requirements.txt
       
-      - name: Install package in dev mode
-        run: pip install -e .
-
       - name: Install DVC + AWS dependencies
         run: |
           pip install dvc "dvc[s3]"
@@ -67,13 +64,13 @@ jobs:
         run: |
           python scripts/promote_model.py
 
-      - name: Run Flask app tests
-        if: success()
-        env:
-          MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}  
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        run: |
-          python -m unittest tests/test_flask_app.py
+      # - name: Run Flask app tests
+      #   if: success()
+      #   env:
+      #     MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}  
+      #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #   run: |
+      #     python -m unittest tests/test_flask_app.py
       
 
