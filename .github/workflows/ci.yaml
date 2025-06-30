@@ -25,6 +25,9 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
+      
+      - name: Install package in dev mode
+        run: pip install -e .
 
       - name: Install DVC + AWS dependencies
         run: |
