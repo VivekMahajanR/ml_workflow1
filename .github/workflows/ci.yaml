@@ -33,7 +33,7 @@ jobs:
           aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws configure set region ${{ secrets.AWS_REGION }}
 
-#
+
       - name: Pull DVC files from S3
         run: |
           dvc pull
@@ -53,7 +53,7 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
-          python -m unittest tests/test_pipeline.py
+          python -m unittest tests/test_model.py
 
       - name: Run Model tests
         if: success()
