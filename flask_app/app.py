@@ -43,7 +43,7 @@ def removing_punctuations(text):
     """Remove punctuations from the text."""
     text = re.sub('[%s]' % re.escape(string.punctuation), ' ', text)
     text = text.replace('؛', "")
-    text = re.sub('\s+', ' ', text).strip()
+    text = re.sub(r'\s+', ' ', text).strip()
     return text
 
 def removing_urls(text):
@@ -88,7 +88,7 @@ model_name = "my_model"
 model_version = get_latet_model_version(model_name)
 
 model_uri = 'http://ec2-3-109-155-24.ap-south-1.compute.amazonaws.com:5000/'
-model = mlflow.pyfunc.load_model(model_uri=model_uri)
+model = mlflow.pyfunc.load_model(model_uri)
 
 vectorizer = pickle.load(open('models/vectorizer.pkl', 'rb'))
 
