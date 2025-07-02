@@ -26,21 +26,25 @@ jobs:
         run: |
           pip install -r requirements.txt
       
-      # - name: Install DVC + AWS dependencies
-      #   run: |
-      #     pip install dvc "dvc[s3]"
-      #     aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
-      #     aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      #     aws configure set region ${{ secrets.AWS_REGION }}
+      - name: Install DVC + AWS dependencies
+        run: |
+          pip install dvc "dvc[s3]"
+          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws configure set region ${{ secrets.AWS_REGION }}
 
 
-      # - name: Pull DVC files from S3
-      #   run: |
-      #     dvc pull
+      - name: Pull DVC files from S3
+        run: |
+          dvc pull
 
       - name: run pipeline
         env:
           DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}
+          MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}  
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
 
         run: |
           dvc repro
@@ -48,6 +52,9 @@ jobs:
       - name: Run Model tests
         env:
           DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}
+          MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}  
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
           python -m unittest tests/test_model.py
 
@@ -55,12 +62,16 @@ jobs:
         if: success()
         env:
           DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}
+          MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}  
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
           python scripts/promote_model.py
 
       # - name: Run Flask app tests
       #   if: success()
       #   env:
+      #     DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}
       #     MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}  
       #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
