@@ -2,16 +2,29 @@
 
 import json
 import mlflow
+from mlflow.tracking import MlflowClient
+import mlflow.pyfunc
 import logging
 import os
+import dagshub
 
-# # Set up AWS credentials for MLflow tracking
-import os
-aws_access_key = os.environ.get("AWS_ACCESS_KEY_ID")
-aws_secret_key = os.environ.get("AWS_SECRET_ACCESS_KEY")
+# # Set up DagsHub credentials for MLflow tracking
+# dagshub_token = os.getenv("DAGSHUB_PAT")
+# if not dagshub_token:
+#     raise EnvironmentError("DAGSHUB_PAT environment variable is not set")
 
-# Set up MLflow tracking URI
-mlflow.set_tracking_uri('http://ec2-3-109-155-24.ap-south-1.compute.amazonaws.com:5000/')
+# os.environ["MLFLOW_TRACKING_USERNAME"] = dagshub_token
+# os.environ["MLFLOW_TRACKING_PASSWORD"] = dagshub_token
+
+# dagshub_url = "https://dagshub.com"
+# repo_owner = "VivekMahajanR"
+# repo_name = "ml_workflow1"
+
+# # Set up MLflow tracking URI
+# mlflow.set_tracking_uri(f'{dagshub_url}/{repo_owner}/{repo_name}.mlflow')
+
+mlflow.set_tracking_uri('https://dagshub.com/VivekMahajanR/ml_workflow1.mlflow')
+dagshub.init(repo_owner='VivekMahajanR', repo_name='ml_workflow1', mlflow=True)
 
 
 # logging configuration
@@ -45,7 +58,7 @@ def load_model_info(file_path: str) -> dict:
         logger.error('Unexpected error occurred while loading the model info: %s', e)
         raise
 
-def register_model(model_name: str, model_info: dict):
+def register_model(model_name: str, model_info: dict, alias: str = "Staging"):
     """Register the model to the MLflow Model Registry."""
     try:
         model_uri = f"runs:/{model_info['run_id']}/{model_info['model_path']}"
@@ -54,14 +67,14 @@ def register_model(model_name: str, model_info: dict):
         model_version = mlflow.register_model(model_uri, model_name)
         
         # Transition the model to "Staging" stage
-        client = mlflow.tracking.MlflowClient()
-        client.transition_model_version_stage(
+        client = MlflowClient()
+        client.set_registered_model_alias(
             name=model_name,
-            version=model_version.version,
-            stage="Staging"
+            alias=alias,
+            version=model_version.version
         )
-        
-        logger.debug(f'Model {model_name} version {model_version.version} registered and transitioned to Staging.')
+
+        logger.debug(f'Model {model_name} version {model_version.version} registered and aliased as "{alias}".')
     except Exception as e:
         logger.error('Error during model registration: %s', e)
         raise

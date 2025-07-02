@@ -1,5 +1,6 @@
 # updated model evaluation
 
+import mlflow.sklearn
 import numpy as np
 import pandas as pd
 import pickle
@@ -8,15 +9,28 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, roc_a
 import logging
 import mlflow
 import mlflow.sklearn
+from mlflow.models import infer_signature
 import mlflow.pyfunc
 import os
+import dagshub
 
-# Set up AWS credentials for MLflow tracking
-import os
-aws_access_key = os.environ.get("AWS_ACCESS_KEY_ID")
-aws_secret_key = os.environ.get("AWS_SECRET_ACCESS_KEY")
-# Set up MLflow tracking URI
-mlflow.set_tracking_uri('http://ec2-3-109-155-24.ap-south-1.compute.amazonaws.com:5000/')
+# # Set up DagsHub credentials for MLflow tracking
+# dagshub_token = os.getenv("DAGSHUB_PAT")
+# if not dagshub_token:
+#     raise EnvironmentError("DAGSHUB_PAT environment variable is not set")
+
+# os.environ["MLFLOW_TRACKING_USERNAME"] = dagshub_token
+# os.environ["MLFLOW_TRACKING_PASSWORD"] = dagshub_token
+
+# dagshub_url = "https://dagshub.com"
+# repo_owner = "VivekMahajanR"
+# repo_name = "ml_workflow1"
+
+# # Set up MLflow tracking URI
+# mlflow.set_tracking_uri(f'{dagshub_url}/{repo_owner}/{repo_name}.mlflow')
+
+mlflow.set_tracking_uri('https://dagshub.com/VivekMahajanR/ml_workflow1.mlflow')
+dagshub.init(repo_owner='VivekMahajanR', repo_name='ml_workflow1', mlflow=True)
 
 # logging configuration
 logger = logging.getLogger('model_evaluation')
@@ -117,6 +131,10 @@ def main():
             X_test = test_data.iloc[:, :-1].values
             y_test = test_data.iloc[:, -1].values
 
+            # Evaluate the model
+            y_pred = clf.predict(X_test)
+            signature = infer_signature(X_test, y_pred)
+            
             metrics = evaluate_model(clf, X_test, y_test)
             
             save_metrics(metrics, 'reports/metrics.json')
@@ -135,7 +153,10 @@ def main():
             save_model_info(run.info.run_id, "model", './reports/experiment_info.json')
 
             # Log model to MLflow
-            mlflow.sklearn.log_model(clf, "model")
+            mlflow.sklearn.log_model( sk_model=clf,
+                                     artifact_path="sklearn-model",
+                                     signature=signature,  # Add the inferred signature
+                                     registered_model_name="my_model")
             
             # Log the metrics file to MLflow
             mlflow.log_artifact('reports/metrics.json')
