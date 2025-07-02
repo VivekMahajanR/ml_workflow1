@@ -27,7 +27,7 @@ repo_owner = "VivekMahajanR"
 repo_name = "ml_workflow1"
 
 # Set up MLflow tracking URI
-dagshub.init(repo_owner='VivekMahajanR', repo_name='ml_workflow1', mlflow=True)
+# dagshub.init(repo_owner='VivekMahajanR', repo_name='ml_workflow1', mlflow=True)
 mlflow.set_tracking_uri(f'{dagshub_url}/{repo_owner}/{repo_name}.mlflow')
 
 # logging configuration

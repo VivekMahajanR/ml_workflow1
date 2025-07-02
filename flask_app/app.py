@@ -67,12 +67,20 @@ def normalize_text(text):
 
     return text
 
-# Set up AWS credentials for MLflow tracking
+# Set up DagsHub credentials for MLflow tracking
+dagshub_token = os.getenv("DAGSHUB_PAT")
+if not dagshub_token:
+    raise EnvironmentError("DAGSHUB_PAT environment variable is not set")
 
-aws_access_key = os.environ.get("AWS_ACCESS_KEY_ID")
-aws_secret_key = os.environ.get("AWS_SECRET_ACCESS_KEY")
+os.environ["MLFLOW_TRACKING_USERNAME"] = dagshub_token
+os.environ["MLFLOW_TRACKING_PASSWORD"] = dagshub_token
+
+dagshub_url = "https://dagshub.com"
+repo_owner = "campusx-official"
+repo_name = "mlops-mini-project"
+
 # Set up MLflow tracking URI
-mlflow.set_tracking_uri('http://ec2-3-109-155-24.ap-south-1.compute.amazonaws.com:5000/')
+mlflow.set_tracking_uri(f'{dagshub_url}/{repo_owner}/{repo_name}.mlflow')
 
 app = Flask(__name__)
 
