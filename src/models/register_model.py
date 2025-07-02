@@ -2,16 +2,25 @@
 
 import json
 import mlflow
+import dagshub
 import logging
 import os
 
-# # Set up AWS credentials for MLflow tracking
-import os
-aws_access_key = os.environ.get("AWS_ACCESS_KEY_ID")
-aws_secret_key = os.environ.get("AWS_SECRET_ACCESS_KEY")
+# # Set up DagsHub credentials for MLflow tracking
+# dagshub_token = os.getenv("DAGSHUB_PAT")
+# if not dagshub_token:
+#     raise EnvironmentError("DAGSHUB_PAT environment variable is not set")
+
+# os.environ["MLFLOW_TRACKING_USERNAME"] = dagshub_token
+# os.environ["MLFLOW_TRACKING_PASSWORD"] = dagshub_token
+
+dagshub_url = "https://dagshub.com"
+repo_owner = "VivekMahajanR"
+repo_name = "ml_workflow1"
 
 # Set up MLflow tracking URI
-mlflow.set_tracking_uri('http://ec2-3-109-155-24.ap-south-1.compute.amazonaws.com:5000/')
+dagshub.init(repo_owner='VivekMahajanR', repo_name='ml_workflow1', mlflow=True)
+mlflow.set_tracking_uri(f'{dagshub_url}/{repo_owner}/{repo_name}.mlflow')
 
 
 # logging configuration
