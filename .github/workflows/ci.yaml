@@ -79,7 +79,7 @@ jobs:
       - name: Debug Docker Hub Creds
         run: |
           echo "Username: ${{ secrets.DOCKER_HUB_USERNAME }}"
-          echo "Token exists: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN != '' }}"
+          echo "Token exists: ${{ secrets.DOCKER_ACCESS_TOKEN != '' }}"
 
       - name: Log in to Docker Hub
         if: success()
@@ -98,5 +98,19 @@ jobs:
         run: |
           docker push ${{ secrets.DOCKER_HUB_USERNAME }}/emo1:latest
           
+      - name: Deploy to EC2
+        if: success()
+        uses: appleboy/ssh-action@v0.1.5
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/emo1:latest
+            docker stop my_app || true
+            docker rm my_app || true
+            docker run -p 80:5000 --name my_app \
+            -e DAGSHUB_PAT=${{ secrets.DAGSHUB_PAT }} \
+            ${{ secrets.DOCKER_HUB_USERNAME }}/emo1:latest
       
 
