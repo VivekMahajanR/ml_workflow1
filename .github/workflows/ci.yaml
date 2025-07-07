@@ -76,41 +76,36 @@ jobs:
         run: |
           python -m unittest tests/test_flask_app.py
 
-      - name: Debug Docker Hub Creds
-        run: |
-          echo "Username: ${{ secrets.DOCKER_HUB_USERNAME }}"
-          echo "Token exists: ${{ secrets.DOCKER_ACCESS_TOKEN != '' }}"
-
-      - name: Log in to Docker Hub
-        if: success()
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_ACCESS_TOKEN }}
-      
+      - name: Login to AWS ECR
+        run:
+          aws confire set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 769018977316.dkr.ecr.ap-south-1.amazonaws.com
       - name: Build Docker image
-        if: success()
+        run:	|
+          docker build -t docker_repo .
+      - name: Tag Docker image
+        run:
+          docker tag docker_repo:latest 769018977316.dkr.ecr.ap-south-1.amazonaws.com/docker_repo:latest
+      - name: Push Docker image to AWS ECR
         run: |
-          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/emo1:latest .
-      
-      - name: Push Docker image
-        if: success()
-        run: |
-          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/emo1:latest
-          
+          docker push 769018977316.dkr.ecr.ap-south-1.amazonaws.com/docker_repo:latest
+
       - name: Deploy to EC2
         if: success()
         uses: appleboy/ssh-action@v0.1.5
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/emo1:latest
-            docker stop my_app || true
-            docker rm my_app || true
-            docker run -p 80:5000 --name my_app \
-              -e DAGSHUB_PAT=${{ secrets.DAGSHUB_PAT }} \
-              ${{ secrets.DOCKER_HUB_USERNAME }}/emo1:latest
+          host: ${{ secrets.EC2_HOST}}
+          username: ${{ secrets. EC2_USER}}
+          key: ${{ secrets. EC2_SSH_KEY }}
+          script:
+            aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+            aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            aws configure set default.region ap-south-1
+            aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 769018977316.dkr.ecr.ap-south-1.amazonaws.com
+            docker pull 769018977316.dkr.ecr.ap-south-1.amazonaws.com/docker_repo:latest
+            docker stop my-app || true
+            docker rm my-app || true
+            docker run -d -p 80:5000 e DAGSHUB_PAT=${{ secrets.DAGSHUB_PAT }} --name my_app 769018977316.dkr.ecr.ap-south-1.amazonaws.com/docker_repo:latest
       
 
